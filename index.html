@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<head>
+	<meta charset="utf-8">
+	<title>Probabilistic mutation signature</title>
+	<link rel="stylesheet" href="./css/bootstrap.css" charset="utf-8">
+	<style type="text/css" media="screen">
+		body {
+			background: #fcfcfc;
+			margin: 0 auto;
+		}
+		
+		.page-header {
+			border: none;
+			color: #4ac;
+		}
+		.page-header h1 {
+			font-size: 4em;
+		}
+		.page-header small {
+			color: #ccc;
+		}
+		.container {
+		 /* margin: 0 auto; */
+		  width: 970px !important;
+		}
+		svg {
+			background: #f0f0f0;
+			width: 100%;
+		}
+
+		svg .background rect {
+			fill: #aaa;
+			opacity: 0.5;
+		}
+		
+		g.bases {
+			fill: #aaa;
+		}
+		
+		rect {
+			stroke: #eee;
+			stroke-width: 0.5px;
+		}
+		
+	</style>
+	
+</head>
+
+<body>
+<input id="uploadData" type="file" multiple style="display:none">
+
+<div class="container">
+	<div class="page-header">
+	  <h1>PMS <small>Probabilistic Mutation Signature</small></h1>
+	</div>
+	<nav class="navbar navbar-default" role="navigation">
+
+			<ul class="nav navbar-nav">
+				<li class="dropdown">
+					<a href="#" class="dropdown-toggle" data-toggle="dropdown">File <b class="caret"></b></a>
+					<ul class="dropdown-menu dropdown-menu-settings" id="menu-file">
+						<li role="presentation" class="dropdown-header">Datasets</li>
+						<li role="presentation" class="dataset active"><a role="menuitem" tabindex="-1" href="#" data-id="Default">Default</a></li>
+						<li role="presentation" class="dataset"><a role="menuitem" tabindex="-1" href="#" data-id="Signature 0">Signature 0</a></li>
+						<li role="presentation" class="dataset"><a role="menuitem" tabindex="-1" href="#" data-id="Signature 1">Signature 1</a></li>
+						<li role="presentation" class="dataset"><a role="menuitem" tabindex="-1" href="#" data-id="Signature 2">Signature 2</a></li>
+						
+						<li role="presentation" class="divider"></li>
+						<li id="add_dataset" role="presentation"><a role="menuitem" tabindex="-1" href="#">Add dataset...</a></li>
+						<li role="presentation" class="divider"></li>
+						<li role="presentation" class="disabled"><a role="menuitem" tabindex="-1" href="#">Save</a></li>
+						<li role="presentation" class="disabled"><a role="menuitem" tabindex="-1" href="#">Export as PDF</a></li>
+						
+					</ul>
+				</li>
+				<li class="dropdown">
+					<a href="#" class="dropdown-toggle" data-toggle="dropdown">Color <b class="caret"></b></a>
+					<ul class="dropdown-menu dropdown-menu-settings" id="menu-color">
+						<li role="presentation" class="dropdown-header">Choose a color set</li>
+						<li id="seqlogo" role="presentation" class="active"><a role="menuitem" tabindex="-1" href="#" data-id="seqlogo">SeqLogo</a></li>
+						<li id="set1" role="presentation"><a role="menuitem" tabindex="-1" href="#" data-id="set1">Set1</a></li>
+						<li id="set2" role="presentation"><a role="menuitem" tabindex="-1" href="#" data-id="set2">Set2</a></li>
+						<li id="set3" role="presentation"><a role="menuitem" tabindex="-1" href="#" data-id="set3">Set3</a></li>
+					</ul>
+				</li>
+				<li class="dropdown">
+					<a href="#" class="dropdown-toggle" data-toggle="dropdown">Display <b class="caret"></b></a>
+					<ul class="dropdown-menu dropdown-menu-settings" id="menu-display">
+						<li role="presentation" class="dropdown-header">Display Bases</li>
+						<li id="vertical" role="presentation"><a role="menuitem" tabindex="-1" href="#" data-id="vertical">Vertical</a></li>
+						<li id="horizontal" role="presentation" class="active"><a role="menuitem" tabindex="-1" href="#" data-id="horizontal">Horizontal</a></li>
+					</ul>
+				</li>
+			</ul>
+
+			<p class="navbar-text">...</p>
+	</nav>
+	
+
+
+
+	<div class="row">
+		
+		
+		<div class="col-xs-12" id="display">
+			<!-- <input id="slider" type="range" min="0" max="360" step="1" value="0"> -->
+			
+			<svg>
+				<clipPath id="clip">
+				  	<rect x="0" y="0" width="100" height="100" rx="10" ry="10" />
+				</clipPath>
+				<!--
+				<g class="background" transform="translate(30,30)" >
+					
+					<g id="connector">
+						<rect x="230" y="-10" width="120" height="360" rx="15" ry="15"/>
+					</g>
+					
+					<clipPath id="clip">
+					  	<rect x="0" y="0" width="100" height="100" rx="10" ry="10" />
+						<rect x="120" y="0" width="100" height="100" rx="10" ry="10"/>
+						<rect x="240" y="0" width="100" height="100" rx="10" ry="10"/>
+						<rect x="360" y="0" width="100" height="100" rx="10" ry="10"/>
+						<rect x="480" y="0" width="100" height="100" rx="10" ry="10"/>
+					</clipPath>
+					
+					<g id="sequence" clip-path="url(#clip)">
+						<rect x="0" y="0" width="100" height="100" />
+						<rect x="120" y="0" width="100" height="100" />
+						<rect x="240" y="0" width="100" height="100" />
+						<rect x="360" y="0" width="100" height="100" />
+						<rect x="480" y="0" width="100" height="100" />
+					</g>
+					
+					<g id="center">
+						<rect x="240" y="120" width="100" height="100" rx="10" ry="10"/>
+					</g>
+					
+					<g>
+						<rect x="240" y="240" width="100" height="100" rx="10" ry="10"/>
+					</g>
+				</g>
+			-->
+			</svg>
+		</div>
+	</div>
+</div>
+<script src="./js/d3.min.js"></script>
+<script src="./js/jquery-2.0.3.min.js"></script>
+<script src="./js/colorbrewer.js"></script>
+<script src="./js/bootstrap.min.js"></script>
+<script src="./js/pms.js"></script>
+<script src="./js/ui.js"></script>
+
+
+</body>
+</html>
