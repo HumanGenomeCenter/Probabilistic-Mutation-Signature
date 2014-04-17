@@ -50,7 +50,6 @@ var updateRotation = function(angle, duration) {
 
 $("body").on('click', "#menu-file .dataset a", function(e) {		// cmp with $("#menu-file .dataset a").on('click', function(e) {
 	var id = $(this).data("id");
-	console.log("menu-file ", $(this).parent());
 	$("#menu-file .dataset").removeClass("active");		// unset
 	$(this).parent().addClass("active");
 	updateData(id);
