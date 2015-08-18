@@ -153,7 +153,7 @@ var updateData = function(dataID) {
 	
 
 };
-updateData("Default");			// initalize 'Default' data
+updateData("Signature 0");			// initalize 'Default' data
 
 
 var updateDisplay = function() {
@@ -216,11 +216,10 @@ var y = x;  // same a x
 var svg = d3.select("#display svg");
 
 var envelope = svg.append("g")
-	.attr("class", "enevelope")
+	.attr("class", "envelope")
 	.attr("transform", "translate(280,40)")
 	
 envelope.append("rect")
-
 	.attr("height", 190)
 	.attr("width", 80)
 	.style("fill", "#ddd")
@@ -228,6 +227,36 @@ envelope.append("rect")
 	.style("stroke-width", "40px")
 	.style("stroke-linejoin", "round")
 	
+	
+var drag = d3.behavior.drag()
+//	.origin(function(d) { return d; })
+	.on("drag", dragmove);
+
+
+	
+function dragmove(source) {	
+	var dx = source.transform.translate[0] = d3.event.x - offset.x;
+	var dy = source.transform.translate[1] = d3.event.y - offset.y;
+	d3.select(this).attr("transform", function(d) { return "translate(" + dx + "," + dy + ")"; })
+}
+
+var dragTop = d3.behavior.drag()
+//	.origin(function(d) { return d; })
+	.on("drag", dragTopmove);
+
+function dragTopmove() {
+	console.log(d3.select(this).attr("trans"), offset);
+	console.log(d3.event.x);	
+	var transform = d3.transform(d3.select(this).attr("transform"));
+	
+	var dx = transform.translate[0] = d3.event.x - offset.x;
+	var dy = transform.translate[1] = d3.event.y - offset.y;
+	d3.select(this).attr("transform", function(d) { return "translate(" + dx + "," + dy + ")"; })
+	
+}
+
+	
+var offset = {x:0, y:0};
 
 var baseGroups = svg.selectAll("g.bases")					// select not-yet exisiting svg:g
 		.data(display.bases)
@@ -236,10 +265,16 @@ var baseGroups = svg.selectAll("g.bases")					// select not-yet exisiting svg:g
 		.attr("transform", function(d,i) { 
 			if (d.transform===undefined) d.transform = d3.transform();
 			var t = d.transform;
-			t.translate = [(30+120*i), 30];			
+			t.translate = [(30+120*i), 320];			
 			return t.toString(); 
 		})
 		.attr("clip-path", "url(#clip)") // clipping
+		.on("mousedown", function(d) {
+			offset.x = d3.event.offsetX - d.transform.translate[0];
+			offset.y = d3.event.offsetY - d.transform.translate[1];
+		})
+		.call(drag);
+		
 
 // base probablities
 var rect = baseGroups.selectAll("rect")
@@ -276,47 +311,58 @@ var labels = baseGroups.selectAll("text")
 // central group
 var centralTop = svg.append("g")
 	.attr("class", "top")
-	.attr("transform", "translate(270,140)")
-	.attr("clip-path", "url(#clip)") // clipping
+	.attr("transform", "translate(220,30)")
+	.attr("clip-path", "url(#cliplarge)") // clipping
+	.on("mousedown", function() {
+		var transform = d3.transform(d3.select(this).attr("transform"));
+		offset.x = d3.event.offsetX - transform.translate[0];
+		offset.y = d3.event.offsetY - transform.translate[1];
+	})
+	.call(dragTop);
+
 		
 var centralGroup = centralTop.selectAll("g.central")					// select not-yet exisiting svg:g
 		.data(display.alterations)
 	.enter().append("svg:g")								// add g on enter svg:g
-		.attr("class", "central")								// add class	
+		.attr("class", "central")								// add class
+
+
+// scalefactor top
+var t = 3;
+
 
 var centralRect = centralGroup.selectAll("rect")
 		.data(Object)			// nested data get automatically passed?
 	.enter().append("svg:rect")
 		.attr("x", function(d, i, a) {
 			d.w = display.bases[2][a]; 		// get x & width from 3rd bases, cache
-			return x(d.w.y0);
+			return x(d.w.y0)*t;
 		})
-		.attr("y", function(d, i) { return y(d.y0); })		// get y & height from replacement alterations
-		.attr("height", function(d) { return y(d.y); })
+		.attr("y", function(d, i) { return y(d.y0)*t; })		// get y & height from replacement alterations
+		.attr("height", function(d) { return y(d.y)*t; })
 		.attr("width", function(d,i,a) { 
-			return x(d.w.y);					// recall cached 3rd base
+			return x(d.w.y)*t;					// recall cached 3rd base
 		})
 		.style("fill", function(d, i) { return colors.current[i]; })
 	
 	
-	
+
 // central labels
 var centralLabels = centralGroup.selectAll("text")
 		.data(Object)
 	.enter().append("svg:text")
 		.attr("x", function(d,i,a) { 
-			return x(d.w.y0 + d.w.y/2); 			// recall cached 3rd base
+			return x(d.w.y0 + d.w.y/2)*t; 			// recall cached 3rd base
 		})	// cache d3.transform
 		.attr("y", function(d, i) {
 			d.transform = d3.transform(); 				// cache rotation center
 			var rx = 50;
 			var ry = y(d.y/2+d.y0);
 			d.transform.rotationCenter = [rx, ry];
-			return y(d.y0+d.y/2); 
+			return y(d.y0+d.y/2)*t; 
 		})
 		.attr("font-size", function(d,i,a) {
-			
-			return y(d3.min([d.y, d.w.y])) + "px"; 
+			return y(d3.min([d.y, d.w.y]))*t + "px"; 
 		})
 		.attr("text-anchor", "middle")				// center text h
 		.attr("alignment-baseline", "central")		// center text v
@@ -324,6 +370,7 @@ var centralLabels = centralGroup.selectAll("text")
 		.text(function (d,i,a) { return baseMap[i]; })	// only show label if data is displayed
 		.attr("opacity", function (d,i) { return (d.y>0.15 && d.w.y>0.15) ? 1 : 0; })		
 		.style("fill", "white")
+
 
 
 

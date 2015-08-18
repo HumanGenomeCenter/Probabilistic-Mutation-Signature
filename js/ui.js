@@ -45,6 +45,8 @@ var updateRotation = function(angle, duration) {
 
 }
 
+//updateRotation(90, 0);
+
 
 // Interactions
 
@@ -150,10 +152,7 @@ $("#menu-display a").on('click', function(e) {
 
 
 
-$("#slider").on("change", function(e) {
-	var d = $(this).val();
-	updateRotation(d);
-});
+
 	
 
 // end document ready
