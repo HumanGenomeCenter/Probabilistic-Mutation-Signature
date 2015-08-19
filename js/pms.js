@@ -9,30 +9,20 @@ var width = 960,
 // G, orange; T and U, red; C, blue; and A, green
 colors = {};
 colors.seqlogo = [d3.rgb('green'), d3.rgb('blue'), d3.rgb('orange'), d3.rgb('red')]; 
+colors.pmsig = [d3.rgb('#26AF28'), d3.rgb('#468BFF'), d3.rgb('#AA8C00'), d3.rgb('#F35C5B')]; 
 colors.set1 = colorbrewer.Set1[4].map(function(c) { return d3.rgb(c); });			// turn colors strings #000000 into d3.rgb objects
 colors.set2 = colorbrewer.Set2[4].map(function(c) { return d3.rgb(c); });
 colors.set3 = colorbrewer.Set3[4].map(function(c) { return d3.rgb(c); });
 colors.current = colors.seqlogo;
 colors.previous = colors.current;		// for fading
+
+colors.strand = [d3.rgb("#19B5B7"), d3.rgb("#EB47DB")];
 /* - - - - - - - - -  Color End - - - - - - - - -  */
 
 var baseMap = ["A", "C", "G", "T"];
 
 
-var j = '{"bases":[\
-		{"A":0.456783,"C":0.09622,"G":0.320569,"T":0.126428},\
-		{"A":0.14292,"C":0.120229,"G":0.679338,"T":0.057513},\
-		{"A":0.194916,"C":0.225219,"G":0.245604,"T":0.334261},\
-		{"A":0.280921,"C":0.166793,"G":0.129435,"T":0.422851},\
-		{"A":0.16038,"C":0.517299,"G":0.259141,"T":0.0631801}\
-	],\
-	"alterations":[\
-		{"A":0.00683693,"C":0.131341,"G":0.792244,"T":0.0900889},\
-		{"A":0.774358,"C":0.00591256,"G":0.037724,"T":0.199743},\
-		{"A":0.0186174,"C":0.681494,"G":0.0054263,"T":0.310741},\
-		{"A":0.309775,"C":0.606085,"G":0.0921147,"T":0.00398728}\
-	]\
-}';
+
 
 var dataset = {};
 dataset["Default"] = {
@@ -48,7 +38,11 @@ dataset["Default"] = {
 		{'A':0.25,'C':0.25,'G':0.25,'T':0.25},
 		{'A':0.25,'C':0.25,'G':0.25,'T':0.25},
 		{'A':0.25,'C':0.25,'G':0.25,'T':0.25}	
-	]	
+	],
+	'strand': {
+		'plus': 0.5,
+		'minus': 0.5,
+	}
 };
 
 dataset["Signature 0"] = {
@@ -64,44 +58,17 @@ dataset["Signature 0"] = {
 		{'A':0.774358	,'C':0.00591256	,'G':0.037724	,'T':0.199743  },
 		{'A':0.0186174	,'C':0.681494	,'G':0.0054263	,'T':0.310741  },
 		{'A':0.309775	,'C':0.606085	,'G':0.0921147	,'T':0.00398728}
-	]	
-};
-
-dataset["Signature 1"] = {
-	'bases': [
-		{'A':0.0131038,'C':0.272986	,'G':0.308754 ,'T':0.405156  },
-		{'A':0.242807 ,'C':0.194019	,'G':0.075388 ,'T':0.487786  },
-		{'A':0.0283908,'C':0.411785	,'G':0.129991 ,'T':0.429833  },
-		{'A':0.415831 ,'C':0.235867	,'G':0.343361 ,'T':0.00494084},
-		{'A':0.353272 ,'C':0.0769459,'G':0.0499446,'T':0.519837  }
 	],
-	'alterations': [
-		{'A':0.0865178,'C':0.328423  ,'G':0.340154  ,'T':0.504458  },
-		{'A':0.674434 ,'C':0.00492005,'G':0.213325  ,'T':0.122081  },
-		{'A':0.359977 ,'C':0.609779  ,'G':0.0155819 ,'T':0.0614081 },
-		{'A':0.797531 ,'C':0.203814  ,'G':0.00807721,'T':0.00471106}
-	]	
-};
-
-dataset["Signature 2"] = {
-	'bases': [
-		{'A':0.17272 ,'C':0.538852,'G':0.0672839,'T':0.221144 },
-		{'A':0.133672,'C':0.154618,'G':0.230174 ,'T':0.481535 },
-		{'A':0.314928,'C':0.374459,'G':0.22335  ,'T':0.0872619},
-		{'A':0.050314,'C':0.091599,'G':0.738873 ,'T':0.119214 },
-		{'A':0.524569,'C':0.159021,'G':0.0322241,'T':0.284186 }
-	],
-	'alterations': [
-		{'A':0.00740596,'C':0.281173  ,'G':0.564092 ,'T':0.169547 },
-		{'A':0.19761   ,'C':0.00623138,'G':0.0229948,'T':0.791858 },
-		{'A':0.211745  ,'C':0.53183   ,'G':0.0104368,'T':0.277299 },
-		{'A':0.479435  ,'C':0.232054  ,'G':0.342324	,'T':0.0269064}
-	]	
+	'strand': {
+		'plus': 0.75,
+		'minus': 0.25,
+	}
 };
 
 
-
-
+var renyiEntropy = function(b) {
+	return 1 + 0.5 * Math.log(Math.pow(b.A,2) + Math.pow(b.C,2) + Math.pow(b.G,2) + Math.pow(b.T,2));
+}
 
 
 
@@ -151,25 +118,44 @@ var updateData = function(dataID) {
 		})	
 	}
 	
+	// update strand
+	display.strand = dataset[dataID].strand;
 
+	// shortcut...
+	currentData = dataset[dataID];
 };
 updateData("Signature 0");			// initalize 'Default' data
+
 
 
 var updateDisplay = function() {
 	baseGroups.data(display.bases)		// rebind
 
+	var duration = 0;
+	
+	rectBackground.data(Object)			// nested data get automatically passed?
+		.transition()
+			.duration(duration)
+				.attr("x", function(d, i) { return y(d.y0); })
+				.attr("width", function(d) { return y(d.y); })
+
+	
+	
 	rect.data(Object)
 		.transition()
-			.duration(1000)
-			.attr("y", function(d, i) { return y(d.y0); })
-			.attr("height", function(d) { return y(d.y); })
-			
+			.duration(duration)
+			.attr("x", function(d, i) { return y(d.y0); })
+			.attr("width", function(d) { return y(d.y); })
+	
 	labels.data(Object)
 		.transition()
-			.duration(1000)
-			.attr("y", function(d, i) { return y(d.y0+d.y/2); })
-			.attr("font-size", function(d, i){ return y(d.y) + "px"; })
+			.duration(duration)
+			.attr("x", function(d, i) { return y(d.y0+d.y/2); })
+			.attr("font-size", function(d, i,a){ 
+				var e = renyiEntropy(currentData.bases[a]);	// find better way.. scale?		
+				if (d.y > (1-e) ) return y(e)-12 + "px"; 		// adjust font size...
+				return y(d.y) + "px"; 
+			})
 			.attr("opacity", function (d,i) {  return (d.y>0.15) ? 1 : 0; })
 			.attrTween("transform", function(d,i,a) {
 				var t = d.transform;	// get transform & old rotation center
@@ -188,21 +174,86 @@ var updateDisplay = function() {
 		
 	centralRect.data(Object)
 		.transition()
-			.duration(1000)
-			.attr("x", function(d, i, a) { return x(d.w.y0); })
-			.attr("y", function(d, i) { return y(d.y0); })
-			.attr("height", function(d) { return y(d.y); })
-			.attr("width", function(d,i,a) { return x(d.w.y); })
+			.duration(duration)
+			.attr("x", function(d, i, a) { return x2(d.w.y0); })
+			.attr("y", function(d) { 
+				if (d.x===1) { 			// adjust scales.. C	
+					return cScale(d.y0);
+				} else if (d.x===3) {  // T
+					return tScale(d.y0);
+				}
+				return y2(d.y0); 	// not needed..?
+			})
+			.attr("height", function(d) { 
+				if (d.x===1) { // C
+					return cScale(d.y);
+				} else if (d.x===3) {  // T
+					return tScale(d.y);
+				}
+				return y2(d.y);		// not needed..?
+			})
+			.attr("width", function(d,i,a) { return x2(d.w.y); })
 			
 	centralLabels.data(Object)
 		.transition()
-			.duration(1000)
-				.attr("x", function(d,i,a) { return x(d.w.y0 + d.w.y/2); })	
-				.attr("y", function(d, i) { return y(d.y0+d.y/2); })
+			.duration(duration)
+				.attr("x", function(d,i,a) { return x2(d.w.y0 + d.w.y/2); })	
+				.attr("y", function(d, i) { 
+					if (d.x===1) { 			// adjust scales.. C	
+						return cScale(d.y0+d.y/2);
+					} else if (d.x===3) {  // T
+						return tScale(d.y0+d.y/2);
+					}
+					return y2(d.y0+d.y/2);
+				})
 				.attr("opacity", function (d,i) { return (d.y>0.15 && d.w.y>0.15) ? 1 : 0; })	
-				.attr("font-size", function(d,i,a) { return y(d3.min([d.y, d.w.y])) + "px"; })
-			
+				.attr("font-size", function(d,i,a) { return y2(d3.min([d.y, d.w.y])) + "px"; })
+	
+	// update strand, quick and dirty
+
+	// remove
+	strands.selectAll(".arc").remove()
+				
+	// recreate
+	arcs = strands.selectAll("g.arc")
+	    .data(pie([display.strand.plus, display.strand.minus]))
+	  .enter().append("g")
+	    .attr("class", "arc")
+
+	arcs.append("path")
+		.attr("d", arc)
+		.style("fill", function(d,i) { return colors.strand[i]; });
+
+	arcs.append("text")
+		.attr("transform", function(d) { return "translate(" + arc.centroid(d) + ")"; })
+		.attr("dy", ".35em")
+		.style("text-anchor", "middle")
+		.attr("font-size", "50px")
+		.style("fill", "white")
+		.text(function(d,i) { if (i===0) return "+"; return "-"; });
+
+	// connex
+	connex = envelope.selectAll("path")
+			.data(display.bases[2])
+
+	connex.attr("d", function(d) {
+			var padding = 0;
+			var start = y2(d.y0)+padding;
+			var topWidth = y2(d.y0+d.y);
+			var bottomWidth = 50+y(d.y0+d.y);
+			var bottom = 50+y(d.y0)+padding;
+			var h = 102;
+			return 	"M"+start+",0 L"+topWidth+",0"+
+					"C"+topWidth+","+h/2+" "+bottomWidth+","+h/2+" "+bottomWidth+","+h+
+					"L"+bottom+","+h+
+					"C"+bottom+","+h/2+" "+start+","+h/2+" "+start+",0"+
+					"Z";
+		})
+	
+	
 }
+
+
 
 
 
@@ -212,51 +263,68 @@ var updateDisplay = function() {
 // scales for [0,1] to [0,100]
 var x = d3.scale.linear().domain([0,1]).range([0, 100]);
 var y = x;  // same a x
+var x2 = d3.scale.linear().domain([0,1]).range([0, 200]);
+var y2 = x2;
+
+var cScale = d3.scale.linear().domain([0,1]).range([0, 200]);
+var tScale = d3.scale.linear().domain([0,1]).range([0, 200]);
 
 var svg = d3.select("#display svg");
 
+
 var envelope = svg.append("g")
 	.attr("class", "envelope")
-	.attr("transform", "translate(280,40)")
-	
-envelope.append("rect")
-	.attr("height", 190)
-	.attr("width", 80)
-	.style("fill", "#ddd")
-	.style("stroke", "#ddd")
-	.style("stroke-width", "40px")
-	.style("stroke-linejoin", "round")
-	
-	
-var drag = d3.behavior.drag()
-//	.origin(function(d) { return d; })
-	.on("drag", dragmove);
+	.attr("transform", "translate(220,229)")
 
 
 	
-function dragmove(source) {	
-	var dx = source.transform.translate[0] = d3.event.x - offset.x;
-	var dy = source.transform.translate[1] = d3.event.y - offset.y;
-	d3.select(this).attr("transform", function(d) { return "translate(" + dx + "," + dy + ")"; })
-}
+var connex = envelope.selectAll("path")
+		.data(display.bases[2])
+	.enter().append("path")
+	.attr("d", function(d) {
+		var padding = 0;
+		var start = y2(d.y0)+padding;
+		var topWidth = y2(d.y0+d.y);
+		var bottomWidth = 50+y(d.y0+d.y);
+		var bottom = 50+y(d.y0)+padding;
+		var h = 102;
+		return 	"M"+start+",0 L"+topWidth+",0"+
+				"C"+topWidth+","+h/2+" "+bottomWidth+","+h/2+" "+bottomWidth+","+h+
+				"L"+bottom+","+h+
+				"C"+bottom+","+h/2+" "+start+","+h/2+" "+start+",0"+
+				"Z";
+	})
 
-var dragTop = d3.behavior.drag()
-//	.origin(function(d) { return d; })
-	.on("drag", dragTopmove);
 
-function dragTopmove() {
-	console.log(d3.select(this).attr("trans"), offset);
-	console.log(d3.event.x);	
-	var transform = d3.transform(d3.select(this).attr("transform"));
+
+var arc = d3.svg.arc().outerRadius(50).innerRadius(0);
+var pie = d3.layout.pie();
+
+var strands = svg.append("g")
+	.attr("class", "strands")
+	.attr("transform", "translate(560,80)")
 	
-	var dx = transform.translate[0] = d3.event.x - offset.x;
-	var dy = transform.translate[1] = d3.event.y - offset.y;
-	d3.select(this).attr("transform", function(d) { return "translate(" + dx + "," + dy + ")"; })
-	
-}
+//var strandData = {plus: 0.8847220518086, minus: 0.513152779481914};
+var arcs = strands.selectAll("g.arc")
+    .data(pie([display.strand.plus, display.strand.minus]))
+  .enter().append("g")
+    .attr("class", "arc")
+
+arcs.append("path")
+	.attr("d", arc)
+	.style("fill", function(d,i) { return colors.strand[i]; });
+
+arcs.append("text")
+	.attr("transform", function(d) { return "translate(" + arc.centroid(d) + ")"; })
+	.attr("dy", ".35em")
+	.style("text-anchor", "middle")
+	.attr("font-size", "50px")
+	.style("fill", "white")
+	.text(function(d,i) { if (i===0) return "+"; return "-"; });
+
+
 
 	
-var offset = {x:0, y:0};
 
 var baseGroups = svg.selectAll("g.bases")					// select not-yet exisiting svg:g
 		.data(display.bases)
@@ -265,35 +333,64 @@ var baseGroups = svg.selectAll("g.bases")					// select not-yet exisiting svg:g
 		.attr("transform", function(d,i) { 
 			if (d.transform===undefined) d.transform = d3.transform();
 			var t = d.transform;
-			t.translate = [(30+120*i), 320];			
+			t.translate = [(30+120*i), 330];		// positioning		
 			return t.toString(); 
 		})
-		.attr("clip-path", "url(#clip)") // clipping
-		.on("mousedown", function(d) {
-			offset.x = d3.event.offsetX - d.transform.translate[0];
-			offset.y = d3.event.offsetY - d.transform.translate[1];
+		.attr("clip-path", function(d,i) {
+			if (i===2) return "url(#centerBase)";	// bottom round only
+			return "url(#standardBase)";			// all round
 		})
-		.call(drag);
+;
+
+//baseGroups.append("rect")
+//	.attr("class", "baseBackground")
 		
 
 // base probablities
-var rect = baseGroups.selectAll("rect")
+var rectBackground = baseGroups.selectAll("rect.background")
 		.data(Object)			// nested data get automatically passed?
 	.enter().append("svg:rect")
-		.attr("x", 0)
-		.attr("y", function(d, i) { return y(d.y0); })
+		.attr("class", "background")
+		.attr("x", function(d, i) { return y(d.y0); })		// switching x,y
+		.attr("y", function(d,i,a) { return y(0); })
 		.attr("opacity", 1)
-		.attr("height", function(d) { return y(d.y); })
-		.attr("width", x(1))
+		.attr("width", function(d) { return y(d.y); })
+		.attr("height", function(d,i,a) { return y(1); })
+
+
+
+var rect = baseGroups.selectAll("rect.foreground")
+		.data(Object)			// nested data get automatically passed?
+	.enter().append("svg:rect")
+		.attr("class", "foreground")
+		.attr("x", function(d, i) { return y(d.y0); })		// switching x,y
+		.attr("y", function(d,i,a) { 
+			var bases = currentData.bases[a];	// find better way to access values
+			return y(renyiEntropy(bases));
+		})
+		.attr("opacity", 1)
+		.attr("width", function(d) { return y(d.y); })
+		.attr("height", function(d,i,a) {
+			return y(1);
+		})
 		.style("fill", function(d, i) { return colors.current[i]; })
 
 // base labels
 var labels = baseGroups.selectAll("text")
 		.data(Object)
 	.enter().append("svg:text")
-		.attr("x", function(d,i,a) { return x(0.5); })	// cache d3.transform
-		.attr("y", function(d, i) { return y(d.y0+d.y/2); })
-		.attr("font-size", function(d, i){ return y(d.y) + "px"; })
+		.attr("y", function(d,i,a) { 
+			var e = renyiEntropy(currentData.bases[a]);	// find better way to access values
+			return y(1-((1-e)/2));
+		})	// cache d3.transform
+		.attr("x", function(d, i) { 
+			return y(d.y0+d.y/2);
+		})
+		.attr("font-size", function(d, i,a){ 
+			var e = renyiEntropy(currentData.bases[a]);	// find better way.. scale?		
+			if (d.y > (1-e) ) return y(1-e) + "px"; 
+			return y(d.y) + "px"; 
+		})
 		.attr("text-anchor", "middle")				// center text h
 		.attr("alignment-baseline", "central")		// center text v
 		.attr("opacity", function (d,i) { return (d.y>0.15) ? 1 : 0; })
@@ -312,13 +409,8 @@ var labels = baseGroups.selectAll("text")
 var centralTop = svg.append("g")
 	.attr("class", "top")
 	.attr("transform", "translate(220,30)")
-	.attr("clip-path", "url(#cliplarge)") // clipping
-	.on("mousedown", function() {
-		var transform = d3.transform(d3.select(this).attr("transform"));
-		offset.x = d3.event.offsetX - transform.translate[0];
-		offset.y = d3.event.offsetY - transform.translate[1];
-	})
-	.call(dragTop);
+	.attr("clip-path", "url(#mutatedBase)") // clipping
+
 
 		
 var centralGroup = centralTop.selectAll("g.central")					// select not-yet exisiting svg:g
@@ -328,7 +420,7 @@ var centralGroup = centralTop.selectAll("g.central")					// select not-yet exisi
 
 
 // scalefactor top
-var t = 3;
+var t = 2;
 
 
 var centralRect = centralGroup.selectAll("rect")
@@ -336,12 +428,12 @@ var centralRect = centralGroup.selectAll("rect")
 	.enter().append("svg:rect")
 		.attr("x", function(d, i, a) {
 			d.w = display.bases[2][a]; 		// get x & width from 3rd bases, cache
-			return x(d.w.y0)*t;
+			return x2(d.w.y0);
 		})
-		.attr("y", function(d, i) { return y(d.y0)*t; })		// get y & height from replacement alterations
-		.attr("height", function(d) { return y(d.y)*t; })
+		.attr("y", function(d, i) { return y2(d.y0); })		// get y & height from replacement alterations
+		.attr("height", function(d) { return y2(d.y); })
 		.attr("width", function(d,i,a) { 
-			return x(d.w.y)*t;					// recall cached 3rd base
+			return x2(d.w.y);					// recall cached 3rd base
 		})
 		.style("fill", function(d, i) { return colors.current[i]; })
 	
@@ -370,6 +462,7 @@ var centralLabels = centralGroup.selectAll("text")
 		.text(function (d,i,a) { return baseMap[i]; })	// only show label if data is displayed
 		.attr("opacity", function (d,i) { return (d.y>0.15 && d.w.y>0.15) ? 1 : 0; })		
 		.style("fill", "white")
+
 
 
 

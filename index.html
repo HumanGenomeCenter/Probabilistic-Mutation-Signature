@@ -2,7 +2,7 @@
 <head>
 	<meta charset="utf-8">
 	<title>Probabilistic mutation signature</title>
-	<link rel="stylesheet" href="./css/bootstrap.css" charset="utf-8">
+	<link rel="stylesheet" href="./css/bootstrap.css " charset="utf-8">
 	<style type="text/css" media="screen">
 		body {
 			background: #fcfcfc;
@@ -25,17 +25,18 @@
 		  height: 500px;
 		}
 		svg {
-			background: #f0f0f0;
+			background: #fff;
 			width: 100%;
 			height: 500px;
 			font-family: "Fira Sans";
 			font-weight: 500;
 		}
-
+		/*
 		svg .background rect {
 			fill: #aaa;
 			opacity: 0.5;
 		}
+		*/
 		
 		g.bases {
 			fill: #aaa;
@@ -49,6 +50,15 @@
 		#cliplarge {
 			inset: 10px 20px 30px 40px;
 		}
+		
+		.envelope path, rect.background {
+			fill: #ccc;
+			fill-opacity: 0.5;
+			stroke: #fff;
+			stroke-width: 0.5px;
+		}
+		
+	
 		
 	</style>
 	
@@ -68,16 +78,23 @@
 					<a href="#" class="dropdown-toggle" data-toggle="dropdown">File <b class="caret"></b></a>
 					<ul class="dropdown-menu dropdown-menu-settings" id="menu-file">
 						<li role="presentation" class="dropdown-header">Datasets</li>
-						<li role="presentation" class="dataset active"><a role="menuitem" tabindex="-1" href="#" data-id="Default">Default</a></li>
-						<li role="presentation" class="dataset"><a role="menuitem" tabindex="-1" href="#" data-id="Signature 0">Signature 0</a></li>
-						<li role="presentation" class="dataset"><a role="menuitem" tabindex="-1" href="#" data-id="Signature 1">Signature 1</a></li>
-						<li role="presentation" class="dataset"><a role="menuitem" tabindex="-1" href="#" data-id="Signature 2">Signature 2</a></li>
+						<li role="presentation" class="dataset active"><a role="menuitem" tabindex="-1" href="#" data-id="Signature 0">Test</a></li>
+						
+						<li role="presentation" class="dataset"><a role="menuitem" tabindex="-1" href="#" data-id="sig_1">sig_1</a></li>
+						<li role="presentation" class="dataset"><a role="menuitem" tabindex="-1" href="#" data-id="sig_3">sig_3</a></li>
+						<li role="presentation" class="dataset"><a role="menuitem" tabindex="-1" href="#" data-id="sig_8">sig_8</a></li>
+						<li role="presentation" class="dataset"><a role="menuitem" tabindex="-1" href="#" data-id="sig_13">sig_13</a></li>
+						<li role="presentation" class="dataset"><a role="menuitem" tabindex="-1" href="#" data-id="sig_20">sig_20</a></li>
+						<li role="presentation" class="dataset"><a role="menuitem" tabindex="-1" href="#" data-id="sig_22">sig_22</a></li>
+						
+
+						
 						
 						<li role="presentation" class="divider"></li>
-						<li id="add_dataset" role="presentation"><a role="menuitem" tabindex="-1" href="#">Add dataset...</a></li>
+				<!--		<li id="add_dataset" role="presentation"><a role="menuitem" tabindex="-1" href="#">Open...</a></li>
 						<li role="presentation" class="divider"></li>
-						<li role="presentation" class="disabled"><a role="menuitem" tabindex="-1" href="#">Save</a></li>
-						<li role="presentation" class="disabled"><a role="menuitem" tabindex="-1" href="#">Export as PDF</a></li>
+						<li role="presentation" class="disabled"><a role="menuitem" tabindex="-1" href="#">Save</a></li>-->
+						<li role="presentation" class="export"><a role="menuitem" tabindex="-1" href="#">Export as SVG</a></li>
 						
 					</ul>
 				</li>
@@ -86,11 +103,13 @@
 					<ul class="dropdown-menu dropdown-menu-settings" id="menu-color">
 						<li role="presentation" class="dropdown-header">Choose a color set</li>
 						<li id="seqlogo" role="presentation" class="active"><a role="menuitem" tabindex="-1" href="#" data-id="seqlogo">SeqLogo</a></li>
+						<li id="pmsig" role="presentation"><a role="menuitem" tabindex="-1" href="#" data-id="pmsig">pmsig</a></li>
 						<li id="set1" role="presentation"><a role="menuitem" tabindex="-1" href="#" data-id="set1">Set1</a></li>
 						<li id="set2" role="presentation"><a role="menuitem" tabindex="-1" href="#" data-id="set2">Set2</a></li>
 						<li id="set3" role="presentation"><a role="menuitem" tabindex="-1" href="#" data-id="set3">Set3</a></li>
 					</ul>
 				</li>
+				<!--
 				<li class="dropdown">
 					<a href="#" class="dropdown-toggle" data-toggle="dropdown">Display <b class="caret"></b></a>
 					<ul class="dropdown-menu dropdown-menu-settings" id="menu-display">
@@ -99,9 +118,10 @@
 						<li id="horizontal" role="presentation" class="active"><a role="menuitem" tabindex="-1" href="#" data-id="horizontal">Horizontal</a></li>
 					</ul>
 				</li>
+					-->
 			</ul>
 
-			<p class="navbar-text">...</p>
+			<p class="navbar-text"></p>
 	</nav>
 	
 
@@ -113,13 +133,30 @@
 		<div class="col-xs-12" id="display">
 			<!-- <input id="slider" type="range" min="0" max="360" step="1" value="0"> -->
 			
-			<svg>
-				<clipPath id="clip">
+			<svg height="500" width="800"><!-- define directlyl, so "save as.." can see content -->
+				<clipPath id="standardBase">
 					<rect x="0" y="0" width="100" height="100" rx="10" ry="10" />
 				</clipPath>
-				<clipPath id="cliplarge">
-					<rect x="0" y="0" width="300" height="300" rx="10" ry="10" />
-					
+				<clipPath id="mutatedBase">
+					<!--<rect x="0" y="0" width="300" height="300" rx="10" ry="10" /> -->
+					<path d=" 	M 10,0 
+								h 180
+								a 10,10 0 0 1 10,10
+								v 190
+								h -200
+								v -190
+								a 10,10 0 0 1 10,-10
+								z"></path>
+				</clipPath>
+				<clipPath id="centerBase">
+					<path d=" 	M 0,0 
+								h 100
+								v 90
+								a 10,10 0 0 1 -10,10
+								h -80
+								a 10,10 0 0 1 -10,-10
+								v -90
+								z"></path>
 				</clipPath>
 		
 			</svg>
