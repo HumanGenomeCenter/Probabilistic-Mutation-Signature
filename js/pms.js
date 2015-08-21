@@ -140,23 +140,26 @@ var updateDisplay = function() {
 				.attr("width", function(d) { return y(d.y); })
 
 	
-	
 	rect.data(Object)
 		.transition()
 			.duration(duration)
 			.attr("x", function(d, i) { return y(d.y0); })
+			.attr("y", function(d,i,a) { 
+				var h = 1 - renyiEntropy(currentData.bases[a]);	// find better way to access values
+				return y(h);
+			})
 			.attr("width", function(d) { return y(d.y); })
 	
 	labels.data(Object)
 		.transition()
 			.duration(duration)
-			.attr("x", function(d, i) { return y(d.y0+d.y/2); })
-			.attr("font-size", function(d, i,a){ 
-				var e = renyiEntropy(currentData.bases[a]);	// find better way.. scale?		
-				if (d.y > (1-e) ) return y(e)-12 + "px"; 		// adjust font size...
-				return y(d.y) + "px"; 
+			.attr("y", function(d,i,a) { 
+				var e = renyiEntropy(currentData.bases[a]);	// find better way to access values
+				return y(1-e+e/2);
 			})
-			.attr("opacity", function (d,i) {  return (d.y>0.15) ? 1 : 0; })
+			.attr("x", function(d, i) { return y(d.y0+d.y/2); })
+			.attr("font-size", adjustLabelSize)
+			.attr("opacity", function (d,i) {  return (d.y>0.15) ? 1 : 0; })	// show/hide bases
 			.attrTween("transform", function(d,i,a) {
 				var t = d.transform;	// get transform & old rotation center
 				var rx = t.rotationCenter[0];
@@ -207,7 +210,7 @@ var updateDisplay = function() {
 					return y2(d.y0+d.y/2);
 				})
 				.attr("opacity", function (d,i) { return (d.y>0.15 && d.w.y>0.15) ? 1 : 0; })	
-				.attr("font-size", function(d,i,a) { return y2(d3.min([d.y, d.w.y])) + "px"; })
+				.attr("font-size", adjustLargeLabelSize)
 	
 	// update strand, quick and dirty
 
@@ -222,12 +225,16 @@ var updateDisplay = function() {
 
 	arcs.append("path")
 		.attr("d", arc)
+		.attr("stroke", "#fff")
+		.attr("stroke-width", 0.5)
 		.style("fill", function(d,i) { return colors.strand[i]; });
 
 	arcs.append("text")
 		.attr("transform", function(d) { return "translate(" + arc.centroid(d) + ")"; })
 		.attr("dy", ".35em")
 		.style("text-anchor", "middle")
+		.attr("font-family", "Fira Sans")
+		.attr("font-weight", 500)
 		.attr("font-size", "50px")
 		.style("fill", "white")
 		.text(function(d,i) { if (i===0) return "+"; return "-"; });
@@ -242,7 +249,7 @@ var updateDisplay = function() {
 			var topWidth = y2(d.y0+d.y);
 			var bottomWidth = 50+y(d.y0+d.y);
 			var bottom = 50+y(d.y0)+padding;
-			var h = 102;
+			var h = 100;
 			return 	"M"+start+",0 L"+topWidth+",0"+
 					"C"+topWidth+","+h/2+" "+bottomWidth+","+h/2+" "+bottomWidth+","+h+
 					"L"+bottom+","+h+
@@ -272,28 +279,7 @@ var tScale = d3.scale.linear().domain([0,1]).range([0, 200]);
 var svg = d3.select("#display svg");
 
 
-var envelope = svg.append("g")
-	.attr("class", "envelope")
-	.attr("transform", "translate(220,229)")
 
-
-	
-var connex = envelope.selectAll("path")
-		.data(display.bases[2])
-	.enter().append("path")
-	.attr("d", function(d) {
-		var padding = 0;
-		var start = y2(d.y0)+padding;
-		var topWidth = y2(d.y0+d.y);
-		var bottomWidth = 50+y(d.y0+d.y);
-		var bottom = 50+y(d.y0)+padding;
-		var h = 102;
-		return 	"M"+start+",0 L"+topWidth+",0"+
-				"C"+topWidth+","+h/2+" "+bottomWidth+","+h/2+" "+bottomWidth+","+h+
-				"L"+bottom+","+h+
-				"C"+bottom+","+h/2+" "+start+","+h/2+" "+start+",0"+
-				"Z";
-	})
 
 
 
@@ -306,18 +292,22 @@ var strands = svg.append("g")
 	
 //var strandData = {plus: 0.8847220518086, minus: 0.513152779481914};
 var arcs = strands.selectAll("g.arc")
-    .data(pie([display.strand.plus, display.strand.minus]))
-  .enter().append("g")
-    .attr("class", "arc")
+		.data(pie([display.strand.plus, display.strand.minus]))
+	.enter().append("g")
+		.attr("class", "arc")
 
 arcs.append("path")
 	.attr("d", arc)
-	.style("fill", function(d,i) { return colors.strand[i]; });
-
+	.attr("fill", function(d,i) { return colors.strand[i]; })
+	.attr("stroke", "#fff")
+	.attr("stroke-width", 0.5)
+	
 arcs.append("text")
 	.attr("transform", function(d) { return "translate(" + arc.centroid(d) + ")"; })
 	.attr("dy", ".35em")
 	.style("text-anchor", "middle")
+	.attr("font-family", "Fira Sans")
+	.attr("font-weight", 500)
 	.attr("font-size", "50px")
 	.style("fill", "white")
 	.text(function(d,i) { if (i===0) return "+"; return "-"; });
@@ -329,7 +319,7 @@ arcs.append("text")
 var baseGroups = svg.selectAll("g.bases")					// select not-yet exisiting svg:g
 		.data(display.bases)
 	.enter().append("svg:g")								// add g on enter svg:g
-		.attr("class", "bases")								// add class	
+		.attr("class", "bases")								// add class
 		.attr("transform", function(d,i) { 
 			if (d.transform===undefined) d.transform = d3.transform();
 			var t = d.transform;
@@ -351,9 +341,13 @@ var rectBackground = baseGroups.selectAll("rect.background")
 		.data(Object)			// nested data get automatically passed?
 	.enter().append("svg:rect")
 		.attr("class", "background")
+		.attr("fill", "#e5e5e5")
+		.attr("fill-opacity", 1)
+		.attr("stroke", "#fff")
+		.attr("stroke-width", 0.5)
+		.attr("stroke-opacity", 1)
 		.attr("x", function(d, i) { return y(d.y0); })		// switching x,y
 		.attr("y", function(d,i,a) { return y(0); })
-		.attr("opacity", 1)
 		.attr("width", function(d) { return y(d.y); })
 		.attr("height", function(d,i,a) { return y(1); })
 
@@ -365,8 +359,8 @@ var rect = baseGroups.selectAll("rect.foreground")
 		.attr("class", "foreground")
 		.attr("x", function(d, i) { return y(d.y0); })		// switching x,y
 		.attr("y", function(d,i,a) { 
-			var bases = currentData.bases[a];	// find better way to access values
-			return y(renyiEntropy(bases));
+			var h = 1 - renyiEntropy(currentData.bases[a]);	// find better way to access values
+			return y(h);
 		})
 		.attr("opacity", 1)
 		.attr("width", function(d) { return y(d.y); })
@@ -375,22 +369,35 @@ var rect = baseGroups.selectAll("rect.foreground")
 		})
 		.style("fill", function(d, i) { return colors.current[i]; })
 
+var adjustLabelSize = function(d,i,a) {
+	var h = renyiEntropy(currentData.bases[a]);	// find better way.. scale?
+	var w = d.y;
+	return y(d3.min([w,h]));
+}
+
+var adjustLargeLabelSize = function(d,i,a) {
+	var w = d.w.y;
+	var h = d.y;
+	console.log(w, h);
+	
+	return y2(d3.min([w, h])) + "px"; 
+}
+
+		
 // base labels
 var labels = baseGroups.selectAll("text")
 		.data(Object)
 	.enter().append("svg:text")
 		.attr("y", function(d,i,a) { 
 			var e = renyiEntropy(currentData.bases[a]);	// find better way to access values
-			return y(1-((1-e)/2));
-		})	// cache d3.transform
+			return y(1-e+e/2);
+		})
 		.attr("x", function(d, i) { 
 			return y(d.y0+d.y/2);
 		})
-		.attr("font-size", function(d, i,a){ 
-			var e = renyiEntropy(currentData.bases[a]);	// find better way.. scale?		
-			if (d.y > (1-e) ) return y(1-e) + "px"; 
-			return y(d.y) + "px"; 
-		})
+		.attr("font-family", "Fira Sans")
+		.attr("font-weight", 500)
+		.attr("font-size", adjustLabelSize)
 		.attr("text-anchor", "middle")				// center text h
 		.attr("alignment-baseline", "central")		// center text v
 		.attr("opacity", function (d,i) { return (d.y>0.15) ? 1 : 0; })
@@ -402,8 +409,41 @@ var labels = baseGroups.selectAll("text")
 			return baseMap[i]; })					// conditionally show labels
 		.style("fill", "white")
 		
-		
-		
+
+
+
+
+var envelope = svg.append("g")
+	.attr("class", "envelope")
+	.attr("transform", "translate(220,230)")
+
+// changed drawing order
+var connex = envelope.selectAll("path")
+		.data(display.bases[2])
+	.enter().append("path")
+		.attr("fill", "#ccc")				// add SVG attr inline, so they show up in print
+		.attr("fill-opacity", 0.5)	
+		.attr("stroke", "#fff")
+		.attr("stroke-width", 0.5)
+		.attr("d", function(d) {
+			var padding = 0;
+			var start = y2(d.y0)+padding;
+			var topWidth = y2(d.y0+d.y);
+			var bottomWidth = 50+y(d.y0+d.y);
+			var bottom = 50+y(d.y0)+padding;
+			var h = 100;
+			return 	"M"+start+",0 L"+topWidth+",0"+
+					"C"+topWidth+","+h/2+" "+bottomWidth+","+h/2+" "+bottomWidth+","+h+
+					"L"+bottom+","+h+
+					"C"+bottom+","+h/2+" "+start+","+h/2+" "+start+",0"+
+					"Z";
+		})
+
+
+
+
+
+
 		
 // central group
 var centralTop = svg.append("g")
@@ -420,7 +460,7 @@ var centralGroup = centralTop.selectAll("g.central")					// select not-yet exisi
 
 
 // scalefactor top
-var t = 2;
+
 
 
 var centralRect = centralGroup.selectAll("rect")
@@ -444,18 +484,18 @@ var centralLabels = centralGroup.selectAll("text")
 		.data(Object)
 	.enter().append("svg:text")
 		.attr("x", function(d,i,a) { 
-			return x(d.w.y0 + d.w.y/2)*t; 			// recall cached 3rd base
+			return x2(d.w.y0 + d.w.y/2); 			// recall cached 3rd base
 		})	// cache d3.transform
 		.attr("y", function(d, i) {
 			d.transform = d3.transform(); 				// cache rotation center
 			var rx = 50;
 			var ry = y(d.y/2+d.y0);
 			d.transform.rotationCenter = [rx, ry];
-			return y(d.y0+d.y/2)*t; 
+			return y2(d.y0+d.y/2); 
 		})
-		.attr("font-size", function(d,i,a) {
-			return y(d3.min([d.y, d.w.y]))*t + "px"; 
-		})
+		.attr("font-family", "Fira Sans")
+		.attr("font-weight", 500)
+		.attr("font-size", adjustLargeLabelSize)
 		.attr("text-anchor", "middle")				// center text h
 		.attr("alignment-baseline", "central")		// center text v
 		

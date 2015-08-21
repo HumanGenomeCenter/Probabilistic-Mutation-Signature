@@ -28,36 +28,9 @@
 			background: #fff;
 			width: 100%;
 			height: 500px;
-			font-family: "Fira Sans";
-			font-weight: 500;
+	
 		}
-		/*
-		svg .background rect {
-			fill: #aaa;
-			opacity: 0.5;
-		}
-		*/
-		
-		g.bases {
-			fill: #aaa;
-		}
-		
-		rect {
-			stroke: #eee;
-			stroke-width: 0.5px;
-		}
-		
-		#cliplarge {
-			inset: 10px 20px 30px 40px;
-		}
-		
-		.envelope path, rect.background {
-			fill: #ccc;
-			fill-opacity: 0.5;
-			stroke: #fff;
-			stroke-width: 0.5px;
-		}
-		
+
 	
 		
 	</style>
@@ -84,8 +57,12 @@
 						<li role="presentation" class="dataset"><a role="menuitem" tabindex="-1" href="#" data-id="sig_3">sig_3</a></li>
 						<li role="presentation" class="dataset"><a role="menuitem" tabindex="-1" href="#" data-id="sig_8">sig_8</a></li>
 						<li role="presentation" class="dataset"><a role="menuitem" tabindex="-1" href="#" data-id="sig_13">sig_13</a></li>
+						<li role="presentation" class="dataset"><a role="menuitem" tabindex="-1" href="#" data-id="sig_17">sig_17</a></li>
+						
 						<li role="presentation" class="dataset"><a role="menuitem" tabindex="-1" href="#" data-id="sig_20">sig_20</a></li>
 						<li role="presentation" class="dataset"><a role="menuitem" tabindex="-1" href="#" data-id="sig_22">sig_22</a></li>
+						<li role="presentation" class="dataset"><a role="menuitem" tabindex="-1" href="#" data-id="sig_25">sig_25</a></li>
+						<li role="presentation" class="dataset"><a role="menuitem" tabindex="-1" href="#" data-id="sig_27">sig_27</a></li>
 						
 
 						
@@ -94,7 +71,7 @@
 				<!--		<li id="add_dataset" role="presentation"><a role="menuitem" tabindex="-1" href="#">Open...</a></li>
 						<li role="presentation" class="divider"></li>
 						<li role="presentation" class="disabled"><a role="menuitem" tabindex="-1" href="#">Save</a></li>-->
-						<li role="presentation" class="export"><a role="menuitem" tabindex="-1" href="#">Export as SVG</a></li>
+						<li role="presentation" class="disabled"><a role="menuitem" tabindex="-1" href="#">Export as SVG</a></li>
 						
 					</ul>
 				</li>
@@ -133,12 +110,11 @@
 		<div class="col-xs-12" id="display">
 			<!-- <input id="slider" type="range" min="0" max="360" step="1" value="0"> -->
 			
-			<svg height="500" width="800"><!-- define directlyl, so "save as.." can see content -->
+			<svg height="500" width="700"><!-- define directlyl, so "save as.." can see content -->
 				<clipPath id="standardBase">
 					<rect x="0" y="0" width="100" height="100" rx="10" ry="10" />
 				</clipPath>
 				<clipPath id="mutatedBase">
-					<!--<rect x="0" y="0" width="300" height="300" rx="10" ry="10" /> -->
 					<path d=" 	M 10,0 
 								h 180
 								a 10,10 0 0 1 10,10

@@ -71,6 +71,7 @@ $("body").on('click', "#menu-file .dataset a", function(e) {		// cmp with $("#me
 });
 	
 // export
+/*
 $("body").on('click', "#menu-file .export a", function(e) {		// cmp with $("#menu-file .dataset a").on('click', function(e) {
 	e.preventDefault();
 	console.log("export");
@@ -83,7 +84,7 @@ function downloadSVG() {
 	var SVGRaw = svg.attr("version", "1.1").attr("xmlns", "http://www.w3.org/2000/svg").node().parentNode.innerHTML;
 	d3.select(this).attr("href", "data:image/svg+xml;charset=utf-8;base64," + btoa(unescape(encodeURIComponent(svgRaw))))
 }
-
+*/
 /*
 
 var w = window.open(strUrl, strWindowName, [strWindowFeatures]);
@@ -107,7 +108,7 @@ var readData = function(id) {
 	data.bases = []
 	data.strand = {};
 	data.alterations = [];
-	d3.text("data/publication/raw/"+id+".txt", function(text) {
+	d3.text("data/publication/raw20150818/"+id+".txt", function(text) {
 		
 		// read as text, and parse rows ... becuase "real" TSV has headers
 		rawData = d3.tsv.parseRows(text).map(function(row) {
